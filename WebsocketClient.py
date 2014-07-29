@@ -11,7 +11,7 @@ socket = io.connect('https://websocket.btcchina.com')
 
 @socket.on('connect')
 def connected():
-    print "connected"
+    print "Connected!"
 
 socket.emit('subscribe', 'marketdata_cnybtc')
 socket.emit('subscribe', 'marketdata_cnyltc')
@@ -19,7 +19,7 @@ socket.emit('subscribe', 'marketdata_btcltc')
 
 @socket.on('trade')
 def ticker(data):
-    print "NEW Trade - %s" % data
+    print "New Trade - %s" % data
 
 while True:
     raw_input()
