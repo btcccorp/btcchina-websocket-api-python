@@ -1,3 +1,8 @@
+""" An example for Python Socket.io Client
+	Require installing socket.io client for Python first
+	Refer to the source here to install socket.io client for Python: https://github.com/fuzeman/PySocketIO-Client
+""" 
+
 import pysocketio_client as io
 import logging
 
