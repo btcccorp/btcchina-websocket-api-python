@@ -1,19 +1,20 @@
 """ An example for Python Socket.io Client
-    Require installing socket.io client for Python first
-    Refer to the source here to install socket.io client for Python: https://github.com/fuzeman/PySocketIO-Client
+    Requires: six,socketIO_client    
 """ 
-
-import pysocketio_client as io
-import logging
-import time
+from socketIO_client import SocketIO, BaseNamespace
 import json
+import time
 import re
 import hmac
 import hashlib
 import base64
 
-access_key = "<YOUR ACCESS KEY>"
-secret_key = "<YOUR SECRET KEY>"
+import logging
+logging.getLogger('socketIO-client').setLevel(logging.DEBUG)
+
+
+access_key = "<YOUR-ACCESS-KEY>"
+secret_key = "<YOUE-SECRET-KEY>"
 
 def get_tonce():
         return int(time.time() * 1000000)
@@ -32,14 +33,14 @@ def get_postdata():
         post_data['method'] = 'subscribe'
         post_data['params'] = ['order_cnybtc', 'order_cnyltc', 'order_btcltc', 'account_info']
         return post_data
-        
+
 def get_sign(pdict):
         pstring = ''
         fields = ['tonce', 'accesskey', 'requestmethod', 'id', 'method', 'params']
         for f in fields:
                 if pdict[f]:
                         if f == 'params':
-                                param_string=str(pdict[f]);
+                                param_string=str(pdict[f])
                                 param_string=param_string.replace('None', '')
                                 param_string=re.sub("[\[\] ]","",param_string)
                                 param_string=re.sub("'",'',param_string)
@@ -51,49 +52,49 @@ def get_sign(pdict):
         pstring=pstring.strip('&')
         phash = hmac.new(secret_key, pstring, hashlib.sha1).hexdigest()
 
-        return base64.b64encode(access_key + ':' + phash)        
-        
-#logging.basicConfig(level=logging.DEBUG)
-socket = io.connect('https://websocket.btcchina.com')
+        return base64.b64encode(access_key + ':' + phash)
 
-@socket.on('connect')
-def connected():
-    print "Connected!"
+class Namespace(BaseNamespace):
 
-socket.emit('subscribe', 'marketdata_cnybtc')
-socket.emit('subscribe', 'marketdata_cnyltc')
-socket.emit('subscribe', 'marketdata_btcltc')
-socket.emit('subscribe', 'grouporder_cnybtc')
-socket.emit('subscribe', 'grouporder_cnyltc')
-socket.emit('subscribe', 'grouporder_btcltc')
+    def on_connect(self):
+        print('[Connected]')
+
+    def on_disconnect(self):
+        print('[Disconnect]')
+
+    def on_ticker(self, *args):
+        print('ticker', args)
+
+    def on_trade(self, *args):
+        print('trade', args)
+
+    def on_grouporder(self, *args):
+        print('grouporder', args)
+
+    def on_order(self, *args):
+        print('order', args)
+
+    def on_account_info(self, *args):
+        print('account_info', args)
+
+    def on_message(self, *args):
+        print('message', args)
+
+    def on_error(self, data):
+        print(data)
+
+socketIO = SocketIO('websocket.btcc.com', 80)
+namespace = socketIO.define(Namespace)
+namespace.emit('subscribe', 'marketdata_cnybtc')
+namespace.emit('subscribe', 'marketdata_cnyltc')
+namespace.emit('subscribe', 'marketdata_btcltc')
+namespace.emit('subscribe', 'grouporder_cnybtc')
+namespace.emit('subscribe', 'grouporder_cnyltc')
+namespace.emit('subscribe', 'grouporder_btcltc')
 
 payload = get_postdata()
 arg = [json.dumps(payload), get_sign(payload)]
-socket.emit('private', arg)
+namespace.emit('private', arg)
+socketIO.wait(seconds=2000000)
+namespace.disconnect()
 
-@socket.on('message')
-def message(data):
-    print "New Message - %s" % data
-    
-@socket.on('trade')
-def trade(data):
-    print "New Trade - %s" % data
-
-@socket.on('ticker')
-def ticker(data):
-    print "New Ticker - %s" % data
-
-@socket.on('grouporder')
-def grouporder(data):
-    print "New GroupOrder - %s" % data
-
-@socket.on('order')
-def order(data):
-    print "New Order - %s" % data
-    
-@socket.on('account_info')
-def account_info(data):
-    print "New Account_info - %s" % data    
-
-while True:
-    raw_input()
