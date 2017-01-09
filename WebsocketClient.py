@@ -31,7 +31,7 @@ def get_postdata():
 
         #modefy here to meet your requirement
         post_data['method'] = 'subscribe'
-        post_data['params'] = ['order_cnybtc', 'order_cnyltc', 'order_btcltc', 'account_info']
+        post_data['params'] = ['order_cnybtc', 'order_cnyltc', 'account_info']
         return post_data
 
 def get_sign(pdict):
@@ -87,10 +87,8 @@ socketIO = SocketIO('websocket.btcc.com', 80)
 namespace = socketIO.define(Namespace)
 namespace.emit('subscribe', 'marketdata_cnybtc')
 namespace.emit('subscribe', 'marketdata_cnyltc')
-namespace.emit('subscribe', 'marketdata_btcltc')
 namespace.emit('subscribe', 'grouporder_cnybtc')
 namespace.emit('subscribe', 'grouporder_cnyltc')
-namespace.emit('subscribe', 'grouporder_btcltc')
 
 payload = get_postdata()
 arg = [json.dumps(payload), get_sign(payload)]
